@@ -114,12 +114,44 @@ app.listen(3000, () => {
 
 ## 📚 Filtros compatibles (`filter`)
 
-- `$in`: `{ alias: { $in: ['TRU', 'SUC'] } }`
-- `$gt` / `$lt`: `{ edad: { $gt: 18 } }`
-- `$regex`: `{ nombre: { $regex: 'alberto' } }`
-- Fechas Mongo: `{ date: { $lt: '2025-01-01' } }`
+La función `getData()` soporta filtros tipo MongoDB para arrays y objetos simples. Los disponibles son:
+
+- `$in`: Coincide si el valor está incluido en el array.
+  ```js
+  { alias: { $in: ['TRU', 'SUC'] } }
+  ```
+
+- `$nin`: Coincide si el valor **no** está en el array.
+  ```js
+  { picture: { $nin: ['url1', 'url2'] } }
+  ```
+
+- `$gt` / `$lt`: Comparaciones numéricas o por fecha.
+  ```js
+  { edad: { $gt: 18 } }
+  { date: { $lt: '2025-01-01' } }
+  ```
+
+- `$ne`: Coincide si el valor es diferente.
+  ```js
+  { tipo: { $ne: 'admin' } }
+  ```
+
+- `$regex`: Coincidencia parcial insensible a mayúsculas.
+  ```js
+  { nombre: { $regex: 'alberto' } }
+  ```
+
+- Fechas MongoDB (`$date`): Comparadas automáticamente con formato `YYYY-MM-DD` o `DD/MM/YYYY`.
+  ```js
+  { fechaNacimiento: { $lt: '01/01/2025' } }
+  ```
+
+> 🧠 También se detectan y comparan automáticamente campos tipo `ObjectId` (`$oid`) y fechas con estructura Mongo (`$date`).
+
 
 ---
+
 
 ## 👤 Autor
 
