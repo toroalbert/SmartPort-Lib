@@ -33,6 +33,7 @@ new SmartPort({
   ev: 'nac', // Opcional. Evento por defecto (también puede venir de process.env)
   apiUrl: 'https://tu.api.url',
   endpoints: ['events', 'juegos', 'person'],
+  token: 'mi-token', // Opcional. Token para Basic Auth en peticiones al API
   cacheDir: './cache', // Carpeta donde se guardan los archivos JSON cacheados
   cacheDuration: 600000 // Duración del caché en milisegundos
 });
@@ -72,10 +73,11 @@ Consulta datos **directamente desde el API**, sin pasar por el caché local. Ace
 **`options:`**
 - `ev`: string — evento a consultar
 - `filter`: object — filtros (se envían como query params al API)
-- `sort`: string — campo y orden
+- `sort`: string — campo y orden (se traduce a `sort` + `order` para el API)
 - `limit`: number — cantidad máxima de resultados
 - `skip`: number — resultados a omitir
 - `search`: string — búsqueda libre
+- `token`: string — token para Basic Auth (opcional, usa el del constructor si no se pasa)
 
 ```js
 const persons = await cache.getAPI('person', {
@@ -84,9 +86,63 @@ const persons = await cache.getAPI('person', {
   skip: 0,
   sort: 'nombre:asc',
   filter: { tipo: { $ne: 'admin' } },
-  search: 'alberto'
+  search: 'alberto',
+  token: 'mi-token' // opcional
 });
 ```
+
+---
+
+### `postAPI(endpoint, body, options)`
+Envía una petición **POST** al API con Basic Auth.
+
+- Sin archivos: envía como `application/x-www-form-urlencoded` (compatible con `$_POST`)
+- Con archivos: envía como `multipart/form-data` (compatible con `$_FILES` + `$_POST`)
+
+**Parámetros:**
+- `endpoint`: string — ruta del endpoint
+- `body`: object — datos a enviar como campos POST
+- `options`: object — `{ ev, token, files }` opcionales
+- `options.files`: object — mapa de `{ nombre: ruta }` o `{ nombre: [ruta1, ruta2] }` para múltiples archivos
+
+```js
+// Sin archivos — cada campo llega como $_POST['titulo'], $_POST['tipo'], etc.
+const nuevo = await cache.postAPI('banners/create', {
+  titulo: 'Mi Banner',
+  tipo: 'principal',
+  date: '2026-04-02'
+}, { ev: 'nac', token: 'mi-token' });
+
+// Con un archivo — llega como $_FILES['picture'] en PHP
+const conFoto = await cache.postAPI('banners/create', {
+  titulo: 'Mi Banner'
+}, {
+  ev: 'nac',
+  files: { picture: 'C:/ruta/a/imagen.jpg' }
+});
+
+// Con múltiples archivos en un campo
+const galeria = await cache.postAPI('banners/create', {
+  titulo: 'Galería'
+}, {
+  ev: 'nac',
+  files: { newpicture: ['C:/ruta/foto1.jpg', 'C:/ruta/foto2.jpg'] }
+});
+```
+
+> 💡 **Tip:** Si recibes archivos desde un formulario HTML en Express, usa `multer` para guardarlos temporalmente y pasa las rutas a `files`:
+> ```js
+> const multer = require('multer');
+> const upload = multer({ dest: 'uploads/' });
+>
+> app.post('/crear-banner', upload.single('picture'), async (req, res) => {
+>   const result = await cache.postAPI('banners/create', req.body, {
+>     ev: 'nac',
+>     files: { picture: req.file.path }
+>   });
+>   res.json(result);
+> });
+> ```
 
 ---
 
@@ -167,6 +223,7 @@ Puedes usar `.env` para centralizar configuración:
 SmartPort-ApiURL=https://api.smartportgms.com
 SmartPort-ev=nac
 SmartPort-Key=123456
+SmartPort-Token=mi-token-secreto
 ```
 
 ---
