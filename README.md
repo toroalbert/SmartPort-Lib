@@ -102,8 +102,9 @@ Envía una petición **POST** al API con Basic Auth.
 **Parámetros:**
 - `endpoint`: string — ruta del endpoint
 - `body`: object — datos a enviar como campos POST
-- `options`: object — `{ ev, token, files }` opcionales
+- `options`: object — `{ ev, token, files, formEncoding }` opcionales
 - `options.files`: object — mapa de `{ nombre: ruta }` o `{ nombre: [ruta1, ruta2] }` para múltiples archivos
+- `options.formEncoding`: string — usa `'php'` para serializar arrays y objetos con notación PHP de corchetes
 
 ```js
 // Sin archivos — cada campo llega como $_POST['titulo'], $_POST['tipo'], etc.
@@ -127,6 +128,16 @@ const galeria = await cache.postAPI('banners/create', {
 }, {
   ev: 'nac',
   files: { newpicture: ['C:/ruta/foto1.jpg', 'C:/ruta/foto2.jpg'] }
+});
+
+// Modo PHP: arrays y objetos se serializan como delegation[0]=ENG-A, etc.
+const phpBody = await cache.postAPI('teams/update', {
+  delegation: ['ENG-A', 'FRA-A'],
+  judges: [{ id: '123', name: 'Árbitro', code: 'AP' }]
+}, {
+  ev: 'nac',
+  token: 'mi-token',
+  formEncoding: 'php'
 });
 ```
 
